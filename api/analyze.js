@@ -1,7 +1,3 @@
-export const config = {
-    runtime: 'edge',
-};
-
 const SYSTEM_PROMPT = `You are a specialized AI medical assistant trained in stroke triage. Analyze clinical notes to assist healthcare providers in rapid stroke identification. Focus on FAST (Face, Arms, Speech, Time) assessment.`;
 
 const USER_PROMPT = (note) => `Based on the following clinical presentation, provide a structured stroke triage assessment.
@@ -61,75 +57,68 @@ function mockAnalyze(note) {
     };
 }
 
-export default async function handler(request) {
-    if (request.method === 'OPTIONS') {
-        return new Response(null, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            },
-        });
+module.exports = async (req, res) => {
+    // CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
     try {
-        const body = await request.json();
-        const note = body.note || '';
+        const note = req.body.note || '';
         const apiKey = process.env.OPENROUTER_API_KEY;
 
         let result;
 
         if (apiKey) {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': 'https://strokesense.vercel.app',
-                    'X-Title': 'StrokeSense AI',
-                },
-                body: JSON.stringify({
-                    model: 'google/gemini-flash-1.5',
-                    messages: [
-                        { role: 'system', content: SYSTEM_PROMPT },
-                        { role: 'user', content: USER_PROMPT(note) },
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 2000,
-                }),
-            });
-
-            const data = await response.json();
-            let content = data.choices?.[0]?.message?.content || '';
-
-            // Clean JSON from markdown
-            if (content.startsWith('```')) {
-                content = content.split('```')[1];
-                if (content.startsWith('json')) content = content.slice(4);
-            }
-
             try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': 'https://strokesense.vercel.app',
+                        'X-Title': 'StrokeSense AI',
+                    },
+                    body: JSON.stringify({
+                        model: 'google/gemini-flash-1.5',
+                        messages: [
+                            { role: 'system', content: SYSTEM_PROMPT },
+                            { role: 'user', content: USER_PROMPT(note) },
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 2000,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`OpenRouter API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                let content = data.choices?.[0]?.message?.content || '';
+
+                // Clean JSON from markdown
+                if (content.startsWith('```')) {
+                    content = content.split('```')[1];
+                    if (content.startsWith('json')) content = content.slice(4);
+                }
+
                 result = JSON.parse(content.trim());
-            } catch {
+            } catch (error) {
+                console.error('AI Analysis failed, falling back to mock:', error);
                 result = mockAnalyze(note);
             }
         } else {
             result = mockAnalyze(note);
         }
 
-        return new Response(JSON.stringify(result), {
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
+        return res.status(200).json(result);
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
+        console.error('Handler error:', error);
+        return res.status(500).json({ error: error.message });
     }
-}
+};

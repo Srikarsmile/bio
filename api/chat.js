@@ -1,23 +1,17 @@
-export const config = {
-    runtime: 'edge',
-};
-
 const SYSTEM_PROMPT = `You are a clinical stroke assessment assistant. Help healthcare providers gather relevant information for stroke triage. Ask focused questions about FAST symptoms (Face, Arms, Speech, Time). Keep responses concise.`;
 
-export default async function handler(request) {
-    if (request.method === 'OPTIONS') {
-        return new Response(null, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            },
-        });
+module.exports = async (req, res) => {
+    // CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
     try {
-        const body = await request.json();
-        const messages = body.messages || [];
+        const messages = req.body.messages || [];
         const apiKey = process.env.OPENROUTER_API_KEY;
 
         let result;
@@ -44,25 +38,19 @@ export default async function handler(request) {
                 }),
             });
 
+            if (!response.ok) {
+                throw new Error(`OpenRouter API error: ${response.status}`);
+            }
+
             const data = await response.json();
             result = { message: data.choices?.[0]?.message?.content || 'I apologize, but I encountered an error.' };
         } else {
             result = { message: "Hi! I'm the StrokeSense AI assistant. Please describe the patient's symptoms and I'll help guide the assessment." };
         }
 
-        return new Response(JSON.stringify(result), {
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
+        return res.status(200).json(result);
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message, message: 'I apologize, but I encountered an error. Please try again.' }), {
-            status: 500,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
+        console.error('Chat error:', error);
+        return res.status(500).json({ error: error.message, message: 'I apologize, but I encountered an error. Please try again.' });
     }
-}
+};

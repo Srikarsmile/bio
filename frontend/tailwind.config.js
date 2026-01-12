@@ -8,6 +8,28 @@ export default {
   theme: {
     extend: {
       colors: {
+        light: {
+          bg: '#F2F2F7',
+          surface: '#FFFFFF',
+          'surface-secondary': '#F2F2F7',
+          border: '#C6C6C8',
+          text: {
+            primary: '#000000',
+            secondary: '#3C3C43',
+            muted: '#8E8E93',
+          },
+        },
+        dark: {
+          bg: '#000000',
+          surface: '#1C1C1E',
+          'surface-secondary': '#2C2C2E',
+          border: '#38383A',
+          text: {
+            primary: '#FFFFFF',
+            secondary: '#EBEBF5',
+            muted: '#8E8E93',
+          },
+        },
         'health-bg': '#000000',
         'health-card': '#1C1C1E',
         'health-text': '#FFFFFF',
@@ -17,7 +39,7 @@ export default {
         'health-red': '#FF453A',
         'health-orange': '#FF9F0A',
         'health-green': '#32D74B',
-        'health-pink': '#FF2D55', // Apple Health Pink
+        'health-pink': '#FF2D55',
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],

@@ -8,56 +8,42 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Light mode - Apple Health Plain White/Gray theme
-        light: {
-          bg: '#F2F2F7',           // System Gray 6 (Page Background)
-          surface: '#FFFFFF',      // White (Card Background)
-          'surface-secondary': '#FFFFFF', // Grouped Table Style is often white on gray
-          border: '#E5E5EA',       // System Gray 5
-          text: {
-            primary: '#000000',    // Black
-            secondary: '#8E8E93',   // System Gray
-            muted: '#C7C7CC',       // System Gray 4
-          },
-        },
-        // Dark mode
-        dark: {
-          bg: '#000000',
-          surface: '#1C1C1E',      // System Gray 6 Dark
-          'surface-secondary': '#1C1C1E',
-          border: '#38383A',       // System Gray 5 Dark
-          text: {
-            primary: '#FFFFFF',
-            secondary: '#8E8E93',
-            muted: '#48484A',
-          },
-        },
-        // Apple Health Flat Colors (No neon, no gradients)
-        health: {
-          pink: '#FF2D55',     // Apple Health Signature Pink (Primary Accent)
-          red: '#FF3B30',      // System Red (Heart/High Risk)
-          orange: '#FF9500',   // System Orange (Activity/Warning)
-          green: '#34C759',    // System Green (Safe/Success)
-          blue: '#007AFF',     // System Blue (Standard/Action)
-          teal: '#30B0C7',     // Vitals Teal
-          indigo: '#5856D6',   // System Purple
-          gray: '#8E8E93',     // System Gray
-        },
+        'health-bg': '#000000',
+        'health-card': '#1C1C1E',
+        'health-text': '#FFFFFF',
+        'health-text-secondary': '#8E8E93',
+        'health-accent': '#0A84FF',
+        'health-border': '#38383A',
+        'health-red': '#FF453A',
+        'health-orange': '#FF9F0A',
+        'health-green': '#32D74B',
+        'health-pink': '#FF2D55', // Apple Health Pink
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['SF Mono', 'Menlo', 'monospace'],
-      },
-      boxShadow: {
-        // Subtler IOS shadows, less glow
-        'card': '0 1px 2px rgba(0,0,0,0.04)',
-        'card-hover': '0 4px 12px rgba(0,0,0,0.08)',
-        'button': '0 1px 2px rgba(0,0,0,0.05)',
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
       },
       borderRadius: {
-        'ios': '10px',      // Standard IOS corner
-        'ios-lg': '12px',   // Large card corner
-        'ios-xl': '16px',
+        'ios': '12px',
+        'ios-lg': '20px',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.4s ease-out',
+        'pulse-subtle': 'pulseSubtle 2s infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        pulseSubtle: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
+        },
       },
     },
   },

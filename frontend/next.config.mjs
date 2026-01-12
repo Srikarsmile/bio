@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    transpilePackages: ['lucide-react'],
-    distDir: 'dist', // Match legacy Vercel "Output Directory" setting (from Vite)
-    output: 'standalone', // Optimization for Vercel
+    transpilePackages: ['lucide-react'], // Example optimization
+    // distDir removed to use default .next
 };
 
 export default nextConfig;

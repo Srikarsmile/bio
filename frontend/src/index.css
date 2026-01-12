@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: theme('colors.light.bg');
+    --surface: theme('colors.light.surface');
+    --surface-secondary: theme('colors.light.surface-secondary');
+    --border: theme('colors.light.border');
+    --text-primary: theme('colors.light.text.primary');
+    --text-secondary: theme('colors.light.text.secondary');
+    --text-muted: theme('colors.light.text.muted');
+  }
+
+  .dark {
+    --bg: theme('colors.dark.bg');
+    --surface: theme('colors.dark.surface');
+    --surface-secondary: theme('colors.dark.surface-secondary');
+    --border: theme('colors.dark.border');
+    --text-primary: theme('colors.dark.text.primary');
+    --text-secondary: theme('colors.dark.text.secondary');
+    --text-muted: theme('colors.dark.text.muted');
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--bg);
+    color: var(--text-primary);
+  }
+}
+
+@layer components {
+
+  /* iOS-style clean card (Inset Grouped) */
+  .card {
+    background-color: var(--surface);
+    @apply rounded-ios-lg p-5 shadow-sm border-none;
+    @apply transition-all duration-200;
+  }
+
+  /* Remove hover lift for cleaner feel, keeps it flat */
+  .card:hover {
+    @apply shadow-md;
+  }
+
+  /* iOS button styles - Flat */
+  .btn {
+    @apply px-5 py-3 rounded-ios-lg font-semibold text-sm;
+    @apply transition-all duration-150 active:scale-[0.98];
+    @apply disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-health-pink text-white shadow-none;
+    /* Apple Health Pink */
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-health-pink/90;
+  }
+
+  .btn-secondary {
+    @apply bg-health-gray/10 text-health-pink font-medium;
+  }
+
+  /* iOS input style - Simple */
+  .input-ios {
+    @apply w-full rounded-ios-lg p-3 text-base bg-white dark:bg-black border border-gray-200 dark:border-gray-800;
+    @apply focus:border-health-pink focus:ring-0;
+    /* Clean focus, no ring glow */
+    @apply outline-none transition-all duration-150;
+    color: var(--text-primary);
+  }
+
+  .input-ios::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* Section label (SF style) */
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2 block;
+  }
+
+  /* Status badges - Flat, text-based mostly */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply text-health-green bg-health-green/10;
+  }
+
+  .badge-warning {
+    @apply text-health-orange bg-health-orange/10;
+  }
+
+  .badge-critical {
+    @apply text-health-red bg-health-red/10;
+  }
+
+  .badge-info {
+    @apply text-health-pink bg-health-pink/10;
+  }
+}
+
+/* Custom scrollbar - minimal iOS style */
+::-webkit-scrollbar {
+  width: 0px;
+  /* Hide scrollbar for cleaner look like iOS */
+  background: transparent;
+}
+
+/* Animation */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s ease-out forwards;
+}
+
+/* Mobile-first responsive utilities */
+@layer utilities {
+  .safe-padding {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}

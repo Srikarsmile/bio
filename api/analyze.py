@@ -1,30 +1,11 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-from openai import OpenAI
+import urllib.request
+import urllib.error
 
-# System prompt for stroke analysis
-STROKE_ANALYSIS_SYSTEM_PROMPT = """You are a specialized AI medical assistant trained in stroke triage and assessment. Your role is to analyze clinical notes and patient presentations to assist healthcare providers in rapid stroke identification.
-
-CRITICAL GUIDELINES:
-1. You are a decision SUPPORT tool, not a replacement for clinical judgment
-2. Always err on the side of caution - when in doubt, recommend further evaluation
-3. Focus on TIME - stroke is a time-critical emergency
-
-FAST Assessment Focus:
-- Face drooping
-- Arm weakness  
-- Speech difficulties
-- Time to act
-
-Key Stroke Mimics to Consider:
-- Hypoglycemia
-- Seizures (postictal state)
-- Migraine with aura
-- Conversion disorder
-- Drug intoxication
-
-Your analysis should be thorough but rapid, prioritizing life-threatening conditions."""
+# System prompts
+STROKE_ANALYSIS_SYSTEM_PROMPT = """You are a specialized AI medical assistant trained in stroke triage. Analyze clinical notes to assist healthcare providers in rapid stroke identification. Focus on FAST (Face, Arms, Speech, Time) assessment. Always err on the side of caution."""
 
 STROKE_ANALYSIS_USER_PROMPT = """Based on the following clinical presentation, provide a structured stroke triage assessment.
 
@@ -36,27 +17,19 @@ Respond with a valid JSON object containing:
   "stroke_probability": <0-100 integer>,
   "classification": "HIGH" | "MEDIUM" | "LOW",
   "primary_impression": "<brief clinical impression>",
-  "key_phrases": [
-    {{"phrase": "<extracted phrase>", "significance": "<clinical relevance>"}}
-  ],
+  "key_phrases": [],
   "stroke_indicators": ["<list of findings supporting stroke>"],
   "mimic_indicators": ["<list of findings suggesting stroke mimic>"],
-  "tpa_assessment": {{
-    "eligible": <true/false/unknown>,
-    "contraindications": ["<list if any>"],
-    "time_considerations": "<assessment of time window>"
-  }},
+  "tpa_assessment": {{"eligible": <true/false/unknown>, "contraindications": [], "time_considerations": "<assessment>"}},
   "lkw_time": "<Last Known Well time if mentioned, else 'Not documented'>",
   "urgency_score": <1-5 integer>,
   "urgency_rationale": "<brief explanation>",
-  "flags": ["<critical warnings>"],
-  "differential_diagnosis": [
-    {{"condition": "<name>", "probability": "<high/medium/low>", "key_features": "<supporting findings>"}}
-  ],
+  "flags": [],
+  "differential_diagnosis": [],
   "recommended_action": "STROKE_ALERT" | "URGENT_NEURO_CONSULT" | "ROUTINE_EVALUATION" | "OBSERVATION"
 }}
 
-Return ONLY valid JSON, no additional text."""
+Return ONLY valid JSON."""
 
 
 class handler(BaseHTTPRequestHandler):
@@ -69,7 +42,6 @@ class handler(BaseHTTPRequestHandler):
         api_key = os.getenv('OPENROUTER_API_KEY')
         
         if not api_key:
-            # Mock response if no API key
             result = self._mock_analyze(note)
         else:
             result = self._analyze_with_ai(note, api_key)
@@ -89,40 +61,43 @@ class handler(BaseHTTPRequestHandler):
     
     def _analyze_with_ai(self, note: str, api_key: str) -> dict:
         try:
-            client = OpenAI(
-                api_key=api_key,
-                base_url="https://openrouter.ai/api/v1",
-                default_headers={
-                    "HTTP-Referer": "https://strokesense.ai",
+            data = json.dumps({
+                "model": "google/gemini-flash-1.5",
+                "messages": [
+                    {"role": "system", "content": STROKE_ANALYSIS_SYSTEM_PROMPT},
+                    {"role": "user", "content": STROKE_ANALYSIS_USER_PROMPT.format(note=note)}
+                ],
+                "temperature": 0.3,
+                "max_tokens": 2000
+            }).encode('utf-8')
+            
+            req = urllib.request.Request(
+                "https://openrouter.ai/api/v1/chat/completions",
+                data=data,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                    "HTTP-Referer": "https://strokesense.vercel.app",
                     "X-Title": "StrokeSense AI"
                 }
             )
             
-            response = client.chat.completions.create(
-                model="google/gemini-3-flash-preview",
-                messages=[
-                    {"role": "system", "content": STROKE_ANALYSIS_SYSTEM_PROMPT},
-                    {"role": "user", "content": STROKE_ANALYSIS_USER_PROMPT.format(note=note)}
-                ],
-                temperature=0.3,
-                max_tokens=2000
-            )
-            
-            content = response.choices[0].message.content
-            # Clean JSON response
-            if content.startswith("```"):
-                content = content.split("```")[1]
-                if content.startswith("json"):
-                    content = content[4:]
-            
-            return json.loads(content.strip())
+            with urllib.request.urlopen(req, timeout=30) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                content = result['choices'][0]['message']['content']
+                
+                # Clean JSON
+                if content.startswith("```"):
+                    content = content.split("```")[1]
+                    if content.startswith("json"):
+                        content = content[4:]
+                
+                return json.loads(content.strip())
         except Exception as e:
             return self._mock_analyze(note)
     
     def _mock_analyze(self, note: str) -> dict:
-        """Fallback mock analysis"""
         lower = note.lower()
-        
         stroke_keywords = ['weakness', 'facial droop', 'slurred', 'numbness', 'vision', 'severe headache']
         mimic_keywords = ['fever', 'seizure', 'migraine', 'anxiety']
         

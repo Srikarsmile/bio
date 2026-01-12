@@ -1,1 +1,1 @@
-openai>=1.0.0
+# No external dependencies required - using only Python built-in libraries

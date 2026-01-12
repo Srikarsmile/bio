@@ -57,7 +57,7 @@ function mockAnalyze(note) {
     };
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -95,6 +95,7 @@ module.exports = async (req, res) => {
                 });
 
                 if (!response.ok) {
+                    console.error(`OpenRouter API error: ${response.status}`);
                     throw new Error(`OpenRouter API error: ${response.status}`);
                 }
 
@@ -107,18 +108,26 @@ module.exports = async (req, res) => {
                     if (content.startsWith('json')) content = content.slice(4);
                 }
 
-                result = JSON.parse(content.trim());
+                try {
+                    result = JSON.parse(content.trim());
+                } catch (parseErr) {
+                    console.error("JSON parse error from AI:", parseErr);
+                    // Fallback to mock if AI returns bad JSON
+                    result = mockAnalyze(note);
+                    result.primary_impression += " (AI Parsing Error Fallback)";
+                }
             } catch (error) {
                 console.error('AI Analysis failed, falling back to mock:', error);
                 result = mockAnalyze(note);
             }
         } else {
+            console.log('No API key found, using mock analysis');
             result = mockAnalyze(note);
         }
 
         return res.status(200).json(result);
     } catch (error) {
-        console.error('Handler error:', error);
+        console.error('Analyze function error:', error);
         return res.status(500).json({ error: error.message });
     }
-};
+}

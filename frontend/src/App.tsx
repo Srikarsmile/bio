@@ -30,7 +30,7 @@ function App() {
   const handleAnalyze = async (note: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.post<AnalysisResponse>('/analyze', { note });
+      const response = await axios.post<AnalysisResponse>('/api/analyze', { note });
       setAnalysis(response.data);
     } catch (error) {
       console.error("Analysis failed:", error);

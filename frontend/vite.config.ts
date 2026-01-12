@@ -7,17 +7,15 @@ export default defineConfig({
   server: {
     host: true, // Expose to local network for mobile testing
     proxy: {
-      '/chat': {
+      '/api/chat': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '/analyze': {
+      '/api/analyze': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-      },
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

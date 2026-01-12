@@ -61,7 +61,7 @@ export default function ChatAssistant({ onTranscriptReady, onAnalyzeRequest, onR
         setIsLoading(true);
 
         try {
-            const response = await axios.post('/chat', {
+            const response = await axios.post('/api/chat', {
                 messages: updatedMessages
             });
 

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
             try {
                 const response = await openrouter.chat.send({
-                    model: 'google/gemini-2.5-flash',
+                    model: 'google/gemini-3-flash-preview',
                     messages: formattedMessages,
                 });
 

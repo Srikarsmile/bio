@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { OpenRouter } from '@openrouter/sdk';
 
 const SYSTEM_PROMPT = `You are a clinical stroke assessment assistant. Help healthcare providers gather relevant information for stroke triage. Ask focused questions about FAST symptoms (Face, Arms, Speech, Time). Keep responses concise.`;
 
@@ -11,38 +12,24 @@ export async function POST(req: Request) {
         let result;
 
         if (apiKey) {
-            const formattedMessages = [
+            const openrouter = new OpenRouter({ apiKey });
+
+            const formattedMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
                 { role: 'system', content: SYSTEM_PROMPT },
-                ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+                ...messages.map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
             ];
 
             try {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`,
-                        'HTTP-Referer': 'https://strokesense.vercel.app',
-                        'X-Title': 'StrokeSense AI',
-                    },
-                    body: JSON.stringify({
-                        model: 'google/gemini-flash-1.5',
-                        messages: formattedMessages,
-                        temperature: 0.7,
-                        max_tokens: 500,
-                    }),
+                const response = await openrouter.chat.send({
+                    model: 'google/gemini-2.5-flash',
+                    messages: formattedMessages,
                 });
 
-                if (!response.ok) {
-                    console.error(`OpenRouter API error: ${response.status}`);
-                    result = { message: "I apologize, but I'm having trouble connecting to the AI service." };
-                } else {
-                    const data = await response.json();
-                    result = { message: data.choices?.[0]?.message?.content || 'I apologize, but I encountered an error.' };
-                }
-            } catch (err) {
-                console.error("Fetch error:", err);
-                result = { message: "I apologize, but I encountered a network error. Please try again." };
+                const content = response.choices?.[0]?.message?.content;
+                result = { message: content || 'I apologize, but I encountered an error.' };
+            } catch (err: any) {
+                console.error("OpenRouter SDK error:", err);
+                result = { message: "I apologize, but I'm having trouble connecting to the AI service." };
             }
         } else {
             result = { message: "Hi! I'm the StrokeSense AI assistant. Please describe the patient's symptoms and I'll help guide the assessment." };

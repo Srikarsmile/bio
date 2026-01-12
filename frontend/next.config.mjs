@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    transpilePackages: ['lucide-react'], // Example optimization
+    transpilePackages: ['lucide-react'],
+    output: 'standalone',
 };
 
 export default nextConfig;

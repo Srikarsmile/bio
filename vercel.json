@@ -4,11 +4,17 @@
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "/api/$1"
+            "destination": "/serverless/$1"
         },
         {
             "source": "/(.*)",
             "destination": "/index.html"
         }
-    ]
+    ],
+    "functions": {
+        "serverless/*.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    }
 }

@@ -9,7 +9,8 @@ cd portfolio && python3 -m http.server 8000
 ```
 
 ## Reading it
-- Turn pages with **← →**, a click on either page, a swipe, or the buttons under the book.
+- Turn pages with **← →**, a click on either page, by grabbing a page's outer edge and dragging it over, or with the side buttons.
+- Pages make a soft paper sound. The speaker button in the top bar mutes it.
 - **Contents** jumps to a chapter. Every spread has its own link (`#p1` … `#p10`, `#end`).
 - **The grown-up version** on each text page opens the technical detail for recruiters.
 
@@ -31,6 +32,16 @@ cd portfolio && python3 -m http.server 8000
 - Story text goes in `.say` headings. Recruiter detail goes in the `<template id="noteN">` next to each one.
 - Search for `EDIT:` to find placeholders: your bio and contact email.
 - There are three inks, set per page with `data-theme="cream" | "tomato" | "ink"`.
+
+## Deploying to your own server (e.g. Hermes)
+From a computer that has the server in `~/.ssh/config`:
+
+```bash
+./portfolio/deploy.sh hermes          # serves on port 8080
+./portfolio/deploy.sh hermes 3001     # or pick a port
+```
+
+It copies the site with rsync, starts a static web server, and prints the address. Run it again to update.
 
 ## Deploying (Vercel)
 Create a new Vercel project from this repo and set **Root Directory** to `portfolio`. There's no build command.

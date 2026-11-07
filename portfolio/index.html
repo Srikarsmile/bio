@@ -16,7 +16,12 @@
 
   <header class="bar">
     <a class="bar__name" href="#cover" data-goto="0">Srikar<span aria-hidden="true">.</span></a>
-    <button class="bar__toc" id="tocOpen" aria-expanded="false" aria-controls="toc">Contents</button>
+    <div class="bar__tools">
+      <button class="bar__sound" id="sound" type="button" aria-pressed="true" aria-label="Page-turn sound">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="waves" d="M16 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="bar__toc" id="tocOpen" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
     <div class="bar__progress" aria-hidden="true"><span id="progress"></span></div>
   </header>
 
@@ -38,6 +43,11 @@
   <main class="desk">
     <h1 class="sr-only">Srikar Reddy Vatti: portfolio</h1>
     <div class="book" id="book" aria-roledescription="book" data-state="closed">
+      <div class="board board--a" aria-hidden="true"></div>
+      <div class="board board--b" aria-hidden="true"></div>
+      <div class="edge edge--a" aria-hidden="true"></div>
+      <div class="edge edge--b" aria-hidden="true"></div>
+      <span class="ribbon" aria-hidden="true"></span>
       <div class="book__stack" id="stack">
         <div class="leaf">
           <div class="face face--front face--cover" data-theme="blue">

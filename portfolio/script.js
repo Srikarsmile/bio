@@ -58,6 +58,7 @@
     nextBtn.disabled = state === N;
     where.textContent = label(state);
     progress.style.setProperty('--p', state / N);
+    book.style.setProperty('--p', state / N);
 
     const current = visibleFaces(state);
     leaves.forEach(leaf => leaf.querySelectorAll('.face').forEach(face => {
@@ -75,6 +76,8 @@
     try { if (location.hash !== hash) history.replaceState(null, '', hash); } catch (_) { /* sandboxed frames */ }
   };
 
+  let swish = () => {};
+
   const goTo = target => {
     target = Math.max(0, Math.min(N, target));
     if (target === state) return;
@@ -91,6 +94,7 @@
         leaf.style.zIndex = N + 10 + j;
         leaf.classList.add('is-turning');
         leaf.classList.toggle('is-flipped', forward);
+        if (j < 3) swish();
         setTimeout(() => {
           turning.delete(leaf);
           leaf.classList.remove('is-turning');
@@ -134,18 +138,87 @@
     face.classList.contains('face--front') ? next() : prev();
   });
 
-  // ── Swipe: sideways on the open book, up/down on the flip-pad.
-  let start = null;
-  book.addEventListener('pointerdown', e => { start = e.target.closest('.diorama') ? null : { x: e.clientX, y: e.clientY }; });
-  book.addEventListener('pointerup', e => {
-    if (!start) return;
-    const d = pad.matches ? e.clientY - start.y : e.clientX - start.x;
-    start = null;
-    if (Math.abs(d) < 40) return;
-    swiped = true;
-    d < 0 ? next() : prev();
-    setTimeout(() => { swiped = false; }, 50);
+  // ── Grab a page and turn it by hand: it follows the pointer, and finishes turning past a third.
+  let drag = null;
+  // The outer edge of the open pages (where the corner curls) always turns; the rest of a picture page spins its scene.
+  const inEdge = (face, e) => {
+    const r = face.getBoundingClientRect(), fwd = face.classList.contains('face--front');
+    return pad.matches
+      ? (fwd ? e.clientY > r.bottom - r.height * .2 : e.clientY < r.top + r.height * .2)
+      : (fwd ? e.clientX > r.right - r.width * .16 : e.clientX < r.left + r.width * .16);
+  };
+  book.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('a, button')) return;
+    const face = e.target.closest('.face.is-current');
+    if (!face) return;
+    const edge = inEdge(face, e);
+    if (!edge && e.target.closest('.diorama')) return;
+    const fwd = face.classList.contains('face--front');
+    const leaf = leaves[fwd ? state : state - 1];
+    if (!leaf || turning.has(leaf)) return;
+    if (edge) e.stopPropagation();            // don't let the scene underneath start spinning
+    drag = { x: e.clientX, y: e.clientY, fwd, leaf, live: false, p: 0, id: e.pointerId, edge };
+  }, true);
+  addEventListener('pointermove', e => {
+    if (!drag) return;
+    const d = pad.matches ? e.clientY - drag.y : e.clientX - drag.x;
+    if (!drag.live) {
+      if (Math.abs(d) < 8) return;
+      drag.live = true;
+      try { book.setPointerCapture(drag.id); } catch (_) {}
+      drag.leaf.classList.add('is-dragging');
+      drag.leaf.style.zIndex = N + 20;
+      book.classList.add('is-dragging');
+    }
+    const span = (pad.matches ? book.clientHeight : book.clientWidth) / 2 * 1.1;
+    drag.p = Math.max(0, Math.min(1, (drag.fwd ? -d : d) / span));
+    const deg = 180 * (drag.fwd ? drag.p : 1 - drag.p);
+    drag.leaf.style.transform = pad.matches ? `rotateX(${deg}deg)` : `rotateY(${-deg}deg)`;
   });
+  const drop = () => {
+    if (!drag) return;
+    const g = drag; drag = null;
+    if (!g.live) {
+      if (g.edge) { swiped = true; setTimeout(() => { swiped = false; }, 60); g.fwd ? next() : prev(); }
+      return;
+    }
+    swiped = true; setTimeout(() => { swiped = false; }, 60);
+    book.classList.remove('is-dragging');
+    g.leaf.classList.remove('is-dragging');
+    requestAnimationFrame(() => {
+      g.leaf.style.transform = '';
+      if (g.p > .3) g.fwd ? next() : prev();
+      else setTimeout(restack, TURN());
+    });
+  };
+  addEventListener('pointerup', drop);
+  addEventListener('pointercancel', drop);
+
+  // ── A soft paper swish when a page turns (synthesised, no audio files). Mute in the top bar.
+  const soundBtn = document.getElementById('sound');
+  let soundOn = true;
+  try { soundOn = localStorage.getItem('book-sound') !== 'off'; } catch (_) {}
+  const setSound = on => { soundOn = on; soundBtn?.setAttribute('aria-pressed', on); try { localStorage.setItem('book-sound', on ? 'on' : 'off'); } catch (_) {} };
+  setSound(soundOn);
+  soundBtn?.addEventListener('click', () => setSound(!soundOn));
+  let actx = null;
+  swish = () => {
+    if (!soundOn || reduce.matches) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const dur = .42, n = Math.floor(actx.sampleRate * dur);
+      const buf = actx.createBuffer(1, n, actx.sampleRate), data = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
+      const src = actx.createBufferSource(); src.buffer = buf;
+      const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .7;
+      const t = actx.currentTime;
+      bp.frequency.setValueAtTime(2800, t); bp.frequency.exponentialRampToValueAtTime(650, t + dur);
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.14, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+      src.connect(bp).connect(g).connect(actx.destination);
+      src.start(t); src.stop(t + dur);
+    } catch (_) {}
+  };
 
   // ── Keyboard.
   addEventListener('keydown', e => {

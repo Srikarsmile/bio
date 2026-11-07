@@ -87,25 +87,14 @@ button { font: inherit; color: inherit; }
   position: relative;
   width: var(--book-w); height: var(--book-h);
   perspective: calc(var(--book-w) * 2.2);
-  touch-action: none;
+  touch-action: none; user-select: none; -webkit-user-select: none;
   transition: transform var(--turn) var(--ease-out);
 }
 /* Closed front cover: centre the single right-hand page. Closed back: centre the left one. */
 .book[data-state="closed"] { transform: translateX(-25%); }
 .book[data-state="end"]    { transform: translateX(25%); }
 
-/* Shadow on the desk under whichever pages are showing. */
-.book::before {
-  content: ""; position: absolute; inset: 1% .8% -1.4%;
-  border-radius: 10px;
-  background: #EAE5DA;
-  box-shadow: 0 34px 70px -18px rgba(14, 26, 58, .42), 0 12px 20px -8px rgba(14, 26, 58, .28);
-  transition: left var(--turn) var(--ease-out), right var(--turn) var(--ease-out), top var(--turn) var(--ease-out), bottom var(--turn) var(--ease-out);
-}
-.book[data-state="closed"]::before { left: 50%; }
-.book[data-state="end"]::before    { right: 50%; }
-
-.book__stack { position: absolute; inset: 0; }
+.book__stack { position: absolute; inset: 0; z-index: 2; }
 
 .leaf {
   position: absolute; top: 0; left: 50%;
@@ -350,18 +339,16 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--em); }
 @media (max-width: 760px) and (orientation: portrait) {
   :root {
     --ratio: 1.08;
-    --pw: min(calc(100vw - 24px), calc((100svh - 150px) / 2 * var(--ratio)));
+    --pw: min(calc(100vw - 40px), calc((100svh - 176px) / 2 * var(--ratio)));
     --book-w: var(--pw);
     --book-h: calc(var(--ph) * 2);
   }
-  .desk { padding-top: 68px; gap: 10px; }
+  .desk { padding-top: 80px; gap: 14px; }
   .controls { position: static; padding: 0; gap: 18px; justify-content: center; }
   .controls .where { position: static; transform: none; }
   .bar { padding: 12px 16px; }
   .book[data-state="closed"] { transform: translateY(-25%); }
   .book[data-state="end"]    { transform: translateY(25%); }
-  .book[data-state="closed"]::before { left: 1%; top: 50%; }
-  .book[data-state="end"]::before    { right: 1%; bottom: 50%; }
 
   .leaf { left: 0; top: 50%; transform-origin: center top; }
   .leaf.is-flipped { transform: rotateX(180deg); }
@@ -542,3 +529,91 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--em); }
 .toy--right .toy__bubble { left: auto; right: 18px; translate: 0 6px; }
 .toy--right .toy__bubble::after { left: auto; right: 32px; translate: 0 -1px; }
 .toy--right.is-talking .toy__bubble { translate: 0 0; }
+
+/* ───────── The book as an object ───────── */
+.bar__tools { display: flex; align-items: center; gap: 10px; }
+.bar__sound {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 2px solid var(--navy); background: transparent; color: var(--navy);
+}
+.bar__sound svg { width: 18px; height: 18px; }
+.bar__sound[aria-pressed="false"] .waves { opacity: 0; }
+.bar__sound[aria-pressed="false"]::after { content: ""; position: absolute; width: 22px; height: 2px; background: currentColor; rotate: -45deg; }
+
+/* Hard covers: navy boards a little larger than the pages, open flat on the desk. */
+.book { --board: max(8px, calc(1.6 * var(--u))); --stack: max(4px, calc(1.6 * var(--u))); --p: 0; }
+.board {
+  position: absolute; z-index: 0; background: var(--navy);
+  box-shadow: 0 30px 60px -20px rgba(14, 26, 58, .5), 0 10px 18px -8px rgba(14, 26, 58, .35);
+  transition: opacity .4s ease;
+}
+.board--a { top: calc(-1 * var(--board)); bottom: calc(-1 * var(--board)); left: calc(-1 * var(--board) - var(--stack)); right: 50%; border-radius: 12px 3px 3px 12px; }
+.board--b { top: calc(-1 * var(--board)); bottom: calc(-1 * var(--board)); right: calc(-1 * var(--board) - var(--stack)); left: 50%; border-radius: 3px 12px 12px 3px; }
+/* The spine: a soft groove where the boards meet. */
+.board--a::after, .board--b::after { content: ""; position: absolute; top: 0; bottom: 0; width: 14px; }
+.board--a::after { right: 0; background: linear-gradient(to left, rgba(0,0,0,.35), transparent); }
+.board--b::after { left: 0; background: linear-gradient(to right, rgba(0,0,0,.35), transparent); }
+.book[data-state="closed"] .board--a, .book[data-state="closed"] .edge--a, .book[data-state="closed"] .ribbon { opacity: 0; }
+.book[data-state="end"] .board--b, .book[data-state="end"] .edge--b { opacity: 0; }
+
+/* Page block: the stack of paper edges moves from right to left as you read. */
+.edge {
+  position: absolute; z-index: 1; top: .5%; bottom: .5%;
+  background: repeating-linear-gradient(to right, #F4EFE4 0 1px, #D8D1C2 1px 2px);
+  transition: width .9s var(--ease-out), opacity .4s;
+}
+.edge--a { right: 100%; width: calc(var(--stack) * (.25 + var(--p) * .75)); border-radius: 3px 0 0 3px; }
+.edge--b { left: 100%; width: calc(var(--stack) * (1 - var(--p) * .75)); border-radius: 0 3px 3px 0; }
+
+/* Ribbon bookmark hanging out of the bottom of the spine. */
+.ribbon {
+  position: absolute; z-index: 1; left: calc(50% + 6px); top: 2%; width: 14px; height: calc(98% + 54px);
+  background: linear-gradient(to right, #2140C4, var(--cobalt) 40%, #3A5CF0);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 10px), 0 100%);
+  transform-origin: top center; animation: ribbon 6s ease-in-out infinite; transition: opacity .4s;
+}
+@keyframes ribbon { 50% { rotate: 1.4deg; } }
+
+/* Paper grain. */
+.face::after {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    var(--fold);
+}
+.face--front { --fold: linear-gradient(to right, rgba(0,0,0,.16), rgba(0,0,0,.04) 5%, transparent 12%, transparent 94%, rgba(255,255,255,.06)); }
+.face--back  { --fold: linear-gradient(to left,  rgba(0,0,0,.16), rgba(0,0,0,.04) 5%, transparent 12%, transparent 94%, rgba(255,255,255,.06)); }
+.face--front::after, .face--back::after { background: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), var(--fold); }
+
+/* Corner curl: the page lifts at its outer corner when you hover, inviting a grab. */
+@media (hover: hover) {
+  .leaf:not(.is-turning):not(.is-dragging) .face.is-current::before {
+    content: ""; position: absolute; bottom: 0; z-index: 4; pointer-events: none;
+    width: 0; height: 0; transition: width .35s var(--ease-back), height .35s var(--ease-back);
+  }
+  .leaf:not(.is-turning):not(.is-dragging) .face--front.is-current::before {
+    right: 0; border-top-left-radius: 6px;
+    background: linear-gradient(315deg, var(--desk) 0 48%, rgba(0,0,0,.18) 50%, #fff 52%, color-mix(in srgb, var(--bg) 70%, #fff) 70%, var(--bg) 100%);
+  }
+  .leaf:not(.is-turning):not(.is-dragging) .face--back.is-current::before {
+    left: 0; border-top-right-radius: 6px;
+    background: linear-gradient(45deg, var(--desk) 0 48%, rgba(0,0,0,.18) 50%, #fff 52%, color-mix(in srgb, var(--bg) 70%, #fff) 70%, var(--bg) 100%);
+  }
+  .book:hover .face.is-current:hover::before { width: calc(7 * var(--u)); height: calc(7 * var(--u)); }
+  .face.is-current:has(.diorama:hover)::before, .face.is-current:has(button:hover)::before { width: 0 !important; height: 0 !important; }
+}
+.leaf.is-dragging { transition: none; }
+.book.is-dragging, .book.is-dragging * { cursor: grabbing !important; }
+
+/* Phones: boards and page edges run along the top and bottom of the flip-pad. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .board--a { left: calc(-1 * var(--board)); right: calc(-1 * var(--board)); top: calc(-1 * var(--board) - var(--stack)); bottom: 50%; border-radius: 12px 12px 3px 3px; }
+  .board--b { left: calc(-1 * var(--board)); right: calc(-1 * var(--board)); bottom: calc(-1 * var(--board) - var(--stack)); top: 50%; border-radius: 3px 3px 12px 12px; }
+  .board--a::after, .board--b::after { width: auto; left: 0; right: 0; height: 12px; top: auto; bottom: auto; }
+  .board--a::after { bottom: 0; background: linear-gradient(to top, rgba(0,0,0,.35), transparent); }
+  .board--b::after { top: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35), transparent); }
+  .edge { left: .5%; right: .5%; top: auto; bottom: auto; background: repeating-linear-gradient(to bottom, #F4EFE4 0 1px, #D8D1C2 1px 2px); }
+  .edge--a { bottom: 100%; height: calc(var(--stack) * (.25 + var(--p) * .75)); width: auto; }
+  .edge--b { top: 100%; height: calc(var(--stack) * (1 - var(--p) * .75)); width: auto; }
+  .ribbon { display: none; }
+  .book[data-state="closed"] .board--a, .book[data-state="closed"] .edge--a { opacity: 0; }
+}

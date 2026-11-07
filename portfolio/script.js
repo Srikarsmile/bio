@@ -72,7 +72,7 @@
     document.dispatchEvent(new CustomEvent('spread', { detail: { faces: current, state } }));
 
     const hash = state === 0 ? '#cover' : state === N ? '#end' : `#p${state}`;
-    if (location.hash !== hash) history.replaceState(null, '', hash);
+    try { if (location.hash !== hash) history.replaceState(null, '', hash); } catch (_) { /* sandboxed frames */ }
   };
 
   const goTo = target => {

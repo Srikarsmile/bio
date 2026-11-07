@@ -1,0 +1,383 @@
+/* ─────────────────────────────────────────────
+   A short illustrated guide: three inks, one book.
+   ───────────────────────────────────────────── */
+
+:root {
+  --cream: #F3ECDF;
+  --ink: #1F1D1B;
+  --tomato: #E5533C;
+  --desk: #E7DDCB;
+
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-back: cubic-bezier(.34, 1.56, .64, 1);
+  --turn: 1.1s;
+
+  /* Desktop: an open book, two portrait pages side by side. */
+  --ratio: .76;                                   /* page width / height */
+  --pw: min(calc((100vw - 48px) / 2), calc((100svh - 176px) * var(--ratio)));
+  --ph: calc(var(--pw) / var(--ratio));
+  --book-w: calc(var(--pw) * 2);
+  --book-h: var(--ph);
+  --u: calc(var(--pw) / 100);                     /* 1% of a page’s width */
+}
+
+/* Each theme is the same three inks, reshuffled. */
+[data-theme="cream"]  { --bg: var(--cream);  --fg: var(--ink);   --accent: var(--tomato); }
+[data-theme="tomato"] { --bg: var(--tomato); --fg: var(--ink);   --accent: var(--cream);  }
+[data-theme="ink"]    { --bg: var(--ink);    --fg: var(--cream); --accent: var(--tomato); }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: radial-gradient(120% 90% at 50% 45%, #EFE6D6 0%, var(--desk) 55%, #D9CDB7 100%);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--tomato); outline-offset: 3px; border-radius: 6px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ───────── Top bar ───────── */
+.bar {
+  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px clamp(16px, 4vw, 48px);
+}
+.bar__name {
+  font-family: var(--display); font-weight: 800; font-size: 1.5rem;
+  text-decoration: none; letter-spacing: -.02em;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+}
+.bar__name span { color: var(--tomato); }
+.bar__toc {
+  font-size: .9rem; font-weight: 600; cursor: pointer;
+  color: var(--cream); background: var(--ink);
+  border: 0; border-radius: 999px; padding: 9px 18px;
+  transition: transform .2s var(--ease-back);
+}
+.bar__toc:hover { transform: scale(1.06) rotate(-2deg); }
+.bar__progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; }
+.bar__progress span {
+  display: block; height: 100%; background: var(--ink);
+  transform-origin: left; transform: scaleX(var(--p, 0));
+  transition: transform var(--turn) var(--ease-out);
+}
+
+/* ───────── Desk & book ───────── */
+.desk {
+  height: 100%;
+  display: grid; place-items: center; align-content: center; gap: 18px;
+  padding: 68px 16px 16px;
+}
+
+.book {
+  position: relative;
+  width: var(--book-w); height: var(--book-h);
+  perspective: calc(var(--book-w) * 2.2);
+  touch-action: none;
+  transition: transform var(--turn) var(--ease-out);
+}
+/* Closed front cover: centre the single right-hand page. Closed back: centre the left one. */
+.book[data-state="closed"] { transform: translateX(-25%); }
+.book[data-state="end"]    { transform: translateX(25%); }
+
+/* Shadow on the desk under whichever pages are showing. */
+.book::before {
+  content: ""; position: absolute; inset: 1% .8% -1.4%;
+  border-radius: 10px;
+  background: #EEE5D5;
+  box-shadow: 0 30px 60px -18px rgba(60, 40, 20, .45), 0 10px 18px -8px rgba(60, 40, 20, .3);
+  transition: left var(--turn) var(--ease-out), right var(--turn) var(--ease-out), top var(--turn) var(--ease-out), bottom var(--turn) var(--ease-out);
+}
+.book[data-state="closed"]::before { left: 50%; }
+.book[data-state="end"]::before    { right: 50%; }
+
+.book__stack { position: absolute; inset: 0; }
+
+.leaf {
+  position: absolute; top: 0; left: 50%;
+  width: var(--pw); height: var(--ph);
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform var(--turn) var(--ease-out);
+}
+.leaf.is-flipped { transform: rotateY(-180deg); }
+
+.face {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: var(--bg); color: var(--fg);
+  padding: calc(9 * var(--u)) calc(9 * var(--u)) calc(11 * var(--u));
+  display: flex; flex-direction: column;
+  pointer-events: none;
+}
+.face.is-current { pointer-events: auto; }
+.face--front { border-radius: 2px 10px 10px 2px; }
+.face--back  { border-radius: 10px 2px 2px 10px; transform: rotateY(180deg); }
+
+/* Paper: a soft fold shadow along the spine, a faint sheen on the outer edge. */
+.face::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+.face--front::after { background: linear-gradient(to right, rgba(0,0,0,.16), rgba(0,0,0,.04) 5%, transparent 12%, transparent 94%, rgba(255,255,255,.06)); }
+.face--back::after  { background: linear-gradient(to left,  rgba(0,0,0,.16), rgba(0,0,0,.04) 5%, transparent 12%, transparent 94%, rgba(255,255,255,.06)); }
+/* A shade that sweeps across a page while it's turning. */
+.leaf.is-turning .face::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: linear-gradient(to right, rgba(0,0,0,.18), transparent 60%);
+  animation: sweep var(--turn) var(--ease-out) both;
+}
+@keyframes sweep { 0%, 100% { opacity: 0; } 45% { opacity: 1; } }
+
+/* ───────── Page typography (sized to the page, not the window) ───────── */
+.eyebrow {
+  display: flex; align-items: center; gap: calc(2.4 * var(--u));
+  margin: 0 0 calc(5 * var(--u));
+  font-size: max(11px, calc(2.3 * var(--u))); font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+}
+.eyebrow::before { content: ""; width: calc(6 * var(--u)); height: 2px; background: currentColor; flex: none; }
+
+h1, h2 {
+  margin: 0;
+  font-family: var(--display); font-weight: 700;
+  letter-spacing: -.025em; line-height: 1.04;
+  font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144;
+  text-wrap: balance;
+}
+h2 { font-size: calc(8.6 * var(--u)); }
+h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+
+.folio {
+  position: absolute; bottom: calc(4.5 * var(--u));
+  font-size: max(11px, calc(2.2 * var(--u))); font-weight: 700; font-variant-numeric: tabular-nums; opacity: .6;
+}
+.face--back .folio  { left: calc(9 * var(--u)); }
+.face--front .folio { right: calc(9 * var(--u)); }
+
+.grown {
+  margin-top: auto; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: .5em;
+  padding: calc(2.2 * var(--u)) calc(4 * var(--u)); border-radius: 999px;
+  border: 2px solid currentColor; background: transparent; cursor: pointer;
+  font-size: max(13px, calc(2.7 * var(--u))); font-weight: 700;
+  transition: background-color .2s, color .2s, transform .25s var(--ease-back);
+}
+.grown:hover { background: var(--fg); color: var(--bg); transform: rotate(-1.5deg); }
+
+.face--art { justify-content: center; align-items: center; padding: calc(8 * var(--u)); }
+.face--art .art { width: 100%; height: auto; max-height: 100%; overflow: visible; }
+
+/* ───────── Covers ───────── */
+.face--cover { justify-content: flex-start; }
+.cover__title { font-size: calc(10.4 * var(--u)); }
+.cover__art { width: 100%; margin-top: auto; overflow: visible; }
+.cover__by { margin: calc(5 * var(--u)) 0 0; font-weight: 700; font-size: max(13px, calc(3 * var(--u))); }
+.cover__hint {
+  position: absolute; right: calc(9 * var(--u)); bottom: calc(4.5 * var(--u));
+  font-weight: 700; font-size: max(12px, calc(2.6 * var(--u)));
+}
+.cover__hint span { display: inline-block; animation: nudge 1.4s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateX(5px); } }
+
+.face--backcover { justify-content: center; }
+.backcover__big { font-family: var(--display); font-weight: 700; font-size: calc(7 * var(--u)); line-height: 1.1; margin: 0 0 calc(5 * var(--u)); letter-spacing: -.02em; }
+.backcover__small { font-size: max(13px, calc(2.8 * var(--u))); opacity: .8; margin: 0 0 calc(7 * var(--u)); }
+.again {
+  align-self: flex-start; cursor: pointer;
+  background: var(--fg); color: var(--bg); border: 0; border-radius: 999px;
+  padding: calc(2.4 * var(--u)) calc(5 * var(--u)); font-weight: 700; font-size: max(13px, calc(2.8 * var(--u)));
+}
+
+/* ───────── The end: contact ───────── */
+.cta { display: flex; flex-wrap: wrap; gap: calc(2.5 * var(--u)); margin-top: calc(7 * var(--u)); }
+.btn {
+  display: inline-flex; align-items: center;
+  padding: calc(2.4 * var(--u)) calc(5 * var(--u)); border-radius: 999px;
+  border: 2px solid var(--fg); text-decoration: none;
+  font-weight: 700; font-size: max(13px, calc(2.9 * var(--u)));
+  transition: transform .25s var(--ease-back);
+}
+.btn:hover { transform: translateY(-3px) rotate(-1.5deg); }
+.btn--solid { background: var(--fg); color: var(--bg); }
+
+/* ───────── Controls under the book ───────── */
+.controls { display: flex; align-items: center; gap: 18px; }
+.turn {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 2px solid var(--ink); background: transparent; cursor: pointer;
+  font-size: 1.25rem; font-weight: 700; display: grid; place-items: center;
+  transition: background-color .2s, color .2s, transform .25s var(--ease-back), opacity .2s;
+}
+.turn:hover:not(:disabled) { background: var(--ink); color: var(--cream); transform: scale(1.08); }
+.turn:disabled { opacity: .25; cursor: default; }
+.where { margin: 0; min-width: 9ch; text-align: center; font-weight: 700; font-size: .9rem; font-variant-numeric: tabular-nums; }
+
+/* ───────── The grown-up version (sheet) ───────── */
+.sheet {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(80svh, 720px);
+  border: 0; border-radius: 22px; padding: 0;
+  background: var(--bg); color: var(--fg);
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,.5);
+}
+.sheet::backdrop { background: rgba(31, 29, 27, .45); backdrop-filter: blur(3px); }
+.sheet[open] { animation: sheet-in .45s var(--ease-back); }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(24px) scale(.96) rotate(-1deg); } }
+.sheet__head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 6px; }
+.sheet__title { margin: 0; font-family: var(--display); font-weight: 800; font-style: italic; font-size: 1.5rem; color: var(--accent); }
+.sheet__close {
+  width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+  border: 2px solid currentColor; background: transparent; font-size: 1.4rem; line-height: 1;
+}
+.sheet__body { padding: 6px 22px 22px; font-size: 1.02rem; }
+.sheet__body p { margin: 0 0 14px; }
+.tags { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.tags li { font-size: .85rem; font-weight: 600; border: 1.5px solid currentColor; border-radius: 999px; padding: 3px 12px; }
+.tags--links a { text-decoration: none; }
+.tags--links a::after { content: " ↗"; font-size: .8em; }
+.tags--links li { transition: background-color .2s, color .2s; }
+.tags--links li:hover { background: var(--fg); color: var(--bg); }
+.steps { padding-left: 1.2em; margin: 0 0 14px; }
+.steps li { margin-bottom: 8px; }
+.small { font-size: .85rem; opacity: .8; }
+.link { font-weight: 700; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+/* ───────── Contents overlay ───────── */
+.toc {
+  position: fixed; inset: 0; z-index: 60;
+  background: var(--ink); color: var(--cream);
+  display: grid; place-items: center;
+  padding: 80px clamp(16px, 6vw, 96px);
+  clip-path: circle(0% at calc(100% - 60px) 36px);
+  transition: clip-path .7s var(--ease-out);
+}
+.toc.is-open { clip-path: circle(150% at calc(100% - 60px) 36px); }
+.toc__inner { width: min(860px, 100%); }
+.toc__label { font-size: .8rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; margin: 0 0 24px; }
+.toc__list { list-style: none; margin: 0; padding: 0; border-top: 2px solid currentColor; }
+.toc__list a {
+  display: flex; align-items: baseline; gap: 18px;
+  padding: 16px 0; border-bottom: 2px solid currentColor; text-decoration: none;
+  font-family: var(--display); font-weight: 700; letter-spacing: -.02em;
+  font-size: clamp(1.5rem, 4.4vw, 3.2rem); line-height: 1.05;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  transition: padding-left .35s var(--ease-out), color .2s;
+}
+.toc__list a span { font-family: var(--body); font-size: .9rem; font-weight: 700; min-width: 1.5em; }
+.toc__list a i { margin-left: auto; font-family: var(--body); font-style: normal; font-size: .85rem; font-weight: 600; opacity: .7; white-space: nowrap; }
+.toc__list a:hover, .toc__list a:focus-visible { padding-left: 18px; color: var(--tomato); }
+.toc__close {
+  margin-top: 32px; font-weight: 600; cursor: pointer;
+  background: transparent; border: 2px solid currentColor; border-radius: 999px; padding: 10px 22px;
+}
+
+/* ───────── Illustration inks ───────── */
+.fill-fg     { fill: var(--fg); }
+.fill-bg     { fill: var(--bg); }
+.fill-accent { fill: var(--accent); }
+.stroke-fg     { stroke: var(--fg); fill: none; }
+.stroke-bg     { stroke: var(--bg); }
+.stroke-accent { stroke: var(--accent); fill: none; }
+.fill-bg.stroke-fg { fill: var(--bg); }
+.fill-fg.stroke-bg, .fill-fg.stroke-accent { fill: var(--fg); }
+.bubble-text { font-family: var(--display); font-weight: 800; font-size: 34px; font-style: italic; }
+.bubble-text--md { font-size: 26px; }
+.bubble-text--sm { font-family: var(--body); font-style: normal; font-weight: 700; font-size: 20px; }
+
+/* ───────── Motion: pieces arrive when their page is opened ───────── */
+.js .say .w {
+  display: inline-block;
+  opacity: 0; transform: translateY(.45em) rotate(2deg);
+  transition: opacity .5s ease calc(.35s + var(--i) * 45ms), transform .7s var(--ease-out) calc(.35s + var(--i) * 45ms);
+}
+.js .is-in .say .w { opacity: 1; transform: none; }
+
+.js .art .pop, .js .art .grow, .js .art .blink, .js .art .drive { transform-box: fill-box; transform-origin: center; }
+.js .art .pop  { opacity: 0; transform: scale(0); transition: transform .8s var(--ease-back) calc(.4s + var(--d, 0s)), opacity .25s ease calc(.4s + var(--d, 0s)); }
+.js .art .rise { opacity: 0; transform: translateY(40px); transition: transform .9s var(--ease-out) calc(.4s + var(--d, 0s)), opacity .5s ease calc(.4s + var(--d, 0s)); }
+.js .art .grow { transform-origin: bottom; transform: scaleY(0); transition: transform .9s var(--ease-back) calc(.4s + var(--d, 0s)); }
+.js .art .drop { opacity: 0; transform: translateY(-240px); transition: transform .8s var(--ease-back) calc(.4s + var(--d, 0s)), opacity .2s ease calc(.4s + var(--d, 0s)); }
+.js .art .draw { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.3s var(--ease-out) calc(.4s + var(--d, 0s)); }
+.js .art .wave { opacity: 0; transition: opacity .4s ease calc(.4s + var(--d, 0s)); }
+.js .art .cursor { opacity: 0; transform: translate(60px, 60px); transition: transform 1s var(--ease-out) calc(.4s + var(--d, 0s)), opacity .3s ease calc(.4s + var(--d, 0s)); }
+
+.js .is-in .art .pop, .js .is-in .art .rise, .js .is-in .art .grow,
+.js .is-in .art .drop, .js .is-in .art .wave, .js .is-in .art .cursor { opacity: 1; transform: none; }
+.js .is-in .art .draw { stroke-dashoffset: 0; }
+
+.wave { transform-box: view-box; transform-origin: 262px 250px; }
+.tick { transform-box: view-box; transform-origin: 200px 210px; }
+.is-in .wave   { animation: wave 1.8s ease-in-out calc(var(--d) + .8s) infinite; }
+.is-in .tick   { animation: spin 3s linear calc(var(--d) + .8s) infinite; }
+.is-in .tick--slow { animation-duration: 36s; }
+.is-in .bob    { animation: bob 3.2s ease-in-out calc(var(--d) + 1.4s) infinite; }
+.is-in .blink  { animation: blink 4s ease-in-out 2.4s infinite; }
+.is-in .drive  { animation: drive 2.6s ease-in-out 1.8s infinite; }
+.is-in .cursor { animation: click 2.4s ease-in-out calc(var(--d) + 1.6s) infinite; }
+.is-in .heart  { animation: beat 1.4s ease-in-out 2s infinite; transform-box: fill-box; transform-origin: center; }
+
+@keyframes wave  { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-16deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-12deg); } }
+@keyframes spin  { to { transform: rotate(360deg); } }
+@keyframes bob   { 50% { transform: translateY(-10px); } }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+@keyframes drive { 50% { transform: translateX(-8px); } }
+@keyframes click { 0%, 70%, 100% { transform: none; } 80% { transform: scale(.88) translate(4px, 4px); } }
+@keyframes beat  { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(1); } 45% { transform: scale(1.08); } }
+@keyframes nudge-down { 50% { transform: translateY(4px); } }
+
+/* ───────── Phones: the book becomes a flip-pad (text on top, picture below) ───────── */
+@media (max-width: 760px) and (orientation: portrait) {
+  :root {
+    --ratio: 1.12;
+    --pw: min(calc(100vw - 32px), calc((100svh - 150px) / 2 * var(--ratio)));
+    --book-w: var(--pw);
+    --book-h: calc(var(--ph) * 2);
+  }
+  .desk { padding-top: 58px; gap: 12px; }
+  .bar { padding: 12px 16px; }
+  .book[data-state="closed"] { transform: translateY(-25%); }
+  .book[data-state="end"]    { transform: translateY(25%); }
+  .book[data-state="closed"]::before { left: 1%; top: 50%; }
+  .book[data-state="end"]::before    { right: 1%; bottom: 50%; }
+
+  .leaf { left: 0; top: 50%; transform-origin: center top; }
+  .leaf.is-flipped { transform: rotateX(180deg); }
+  .face { padding: calc(6 * var(--u)) calc(7 * var(--u)) calc(9 * var(--u)); }
+  .face--front { border-radius: 2px 2px 10px 10px; }
+  .face--back  { border-radius: 10px 10px 2px 2px; transform: rotateX(180deg); }
+  .face--front::after { background: linear-gradient(to bottom, rgba(0,0,0,.16), transparent 9%); }
+  .face--back::after  { background: linear-gradient(to top,    rgba(0,0,0,.16), transparent 9%); }
+  .leaf.is-turning .face::before { background: linear-gradient(to bottom, rgba(0,0,0,.18), transparent 60%); }
+
+  h2 { font-size: calc(7.4 * var(--u)); }
+  .eyebrow { margin-bottom: calc(3.5 * var(--u)); }
+  .cover__title { font-size: calc(8.6 * var(--u)); }
+  .cover__art { width: 64%; }
+  .cover__by { margin-top: calc(3 * var(--u)); }
+  .face--art { padding: calc(5 * var(--u)); }
+  .face--back .folio, .face--front .folio { left: auto; right: calc(7 * var(--u)); bottom: calc(3 * var(--u)); }
+  .cover__hint { bottom: calc(3 * var(--u)); right: calc(7 * var(--u)); }
+  .cover__hint span { animation-name: nudge-down; }
+  .cta { margin-top: calc(4 * var(--u)); }
+  .backcover__big { font-size: calc(6.4 * var(--u)); }
+}
+
+/* ───────── Reduced motion: pages swap, nothing flies ───────── */
+@media (prefers-reduced-motion: reduce) {
+  :root { --turn: .01ms; }
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
+  .js .say .w, .js .art * { opacity: 1 !important; transform: none !important; stroke-dashoffset: 0 !important; }
+}
+
+.face.is-current { cursor: pointer; }
+.face.is-current :is(a, button) { cursor: pointer; }

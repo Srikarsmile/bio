@@ -381,3 +381,8 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
 
 .face.is-current { cursor: pointer; }
 .face.is-current :is(a, button) { cursor: pointer; }
+
+/* ───────── Gaussian splats ───────── */
+.splat-canvas, .splat-still { position: absolute; pointer-events: none; z-index: 1; }
+.has-splats .art.is-splatted { visibility: hidden; }
+.face--art::after, .face--cover::after { z-index: 3; }

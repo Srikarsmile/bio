@@ -67,6 +67,9 @@
       if (on) face.classList.add('is-in');
     }));
 
+    window.__currentFaces = current;
+    document.dispatchEvent(new CustomEvent('spread', { detail: { faces: current, state } }));
+
     const hash = state === 0 ? '#cover' : state === N ? '#end' : `#p${state}`;
     if (location.hash !== hash) history.replaceState(null, '', hash);
   };

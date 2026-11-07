@@ -13,6 +13,13 @@ cd portfolio && python3 -m http.server 8000
 - **Contents** jumps to a chapter. Every spread has its own link (`#p1` … `#p10`, `#end`).
 - **The grown-up version** on each text page opens the technical detail for recruiters.
 
+## Gaussian splats
+`splat.js` rebuilds each illustration from thousands of soft 3D gaussians. It uses the same maths as 3D Gaussian Splatting: a 3D covariance is projected to a 2D ellipse and blended back to front. It's a small WebGL2 renderer with no dependencies. The splats swirl in when a page opens, tilt with the pointer, and part around the cursor.
+
+- Edges and lettering use many tiny splats to stay crisp; fills use larger brush-like ones.
+- Reduced-motion users, browsers without WebGL2, and machines that can't keep up all get the flat SVG drawings automatically.
+- Add `?splats=force` to the URL to keep splats on even on a slow GPU.
+
 ## Editing
 - Each leaf in `index.html` is one sheet of paper. Its front is a right-hand page and its back is the next left-hand page.
 - Story text goes in `.say` headings. Recruiter detail goes in the `<template id="noteN">` next to each one.

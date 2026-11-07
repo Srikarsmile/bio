@@ -13,8 +13,11 @@ cd portfolio && python3 -m http.server 8000
 - **Contents** jumps to a chapter. Every spread has its own link (`#p1` … `#p10`, `#end`).
 - **The grown-up version** on each text page opens the technical detail for recruiters.
 
+## Cube dioramas
+`cubes.js` is a small CSS-3D engine plus the ten picture-page scenes. Each scene is a list of `[x, y, z, w, h, d, colour, extra]` boxes on a plinth, and colours `d1`–`d4` follow the page theme. Drag a diorama to spin it. The cube robot and cat use the same engine.
+
 ## Gaussian splats
-`splat.js` rebuilds each illustration from thousands of soft 3D gaussians. It uses the same maths as 3D Gaussian Splatting: a 3D covariance is projected to a 2D ellipse and blended back to front. It's a small WebGL2 renderer with no dependencies. The splats swirl in when a page opens, tilt with the pointer, and part around the cursor.
+`splat.js` rebuilds the cover illustration from thousands of soft 3D gaussians. It uses the same maths as 3D Gaussian Splatting: a 3D covariance is projected to a 2D ellipse and blended back to front. It's a small WebGL2 renderer with no dependencies. The splats swirl in when a page opens, tilt with the pointer, and part around the cursor.
 
 - Edges and lettering use many tiny splats to stay crisp; fills use larger brush-like ones.
 - Reduced-motion users, browsers without WebGL2, and machines that can't keep up all get the flat SVG drawings automatically.

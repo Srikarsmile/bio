@@ -136,7 +136,7 @@
 
   // ── Swipe: sideways on the open book, up/down on the flip-pad.
   let start = null;
-  book.addEventListener('pointerdown', e => { start = { x: e.clientX, y: e.clientY }; });
+  book.addEventListener('pointerdown', e => { start = e.target.closest('.diorama') ? null : { x: e.clientX, y: e.clientY }; });
   book.addEventListener('pointerup', e => {
     if (!start) return;
     const d = pad.matches ? e.clientY - start.y : e.clientX - start.x;

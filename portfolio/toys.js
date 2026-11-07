@@ -57,14 +57,6 @@
     11: ['bot', 'Read it again?'],
   };
 
-  const makeCube = ([x, y, z, w, h, d, c, cls]) => {
-    const el = document.createElement('div');
-    el.className = 'cube' + (cls ? ' ' + cls : '');
-    el.style.cssText = `--x:${x}px;--y:${y}px;--z:${z}px;--w:${w}px;--h:${h}px;--d:${d}px;--c:${c}`;
-    el.innerHTML = '<i class="f f--front"></i><i class="f f--back"></i><i class="f f--right"></i><i class="f f--left"></i><i class="f f--top"></i><i class="f f--bottom"></i>';
-    return el;
-  };
-
   const toys = [];
   const build = (name, spec, side, label) => {
     const toy = document.createElement('div');
@@ -74,9 +66,9 @@
     toy.setAttribute('aria-label', `${label}. Drag to spin, press Enter to say hi.`);
     toy.innerHTML = `<p class="toy__bubble" aria-live="polite"></p><div class="toy__hop"><div class="toy__rig"></div></div><span class="toy__shadow"></span>${name === 'bot' ? '<span class="toy__hint">drag me ↻</span>' : ''}`;
     const rig = toy.querySelector('.toy__rig');
-    spec.forEach(s => rig.appendChild(makeCube(s)));
+    Cubes.build(spec, rig);
     document.body.appendChild(toy);
-    const t = { name, el: toy, rig, bubble: toy.querySelector('.toy__bubble'), rx: -14, ry: side === 'left' ? 24 : -24, vy: 0, vx: 0, drag: null, said: 0, timer: 0 };
+    const t = { name, el: toy, rig, bubble: toy.querySelector('.toy__bubble'), said: 0, timer: 0 };
     toys.push(t);
     return t;
   };
@@ -92,36 +84,16 @@
   };
   const hop = (t, spin = false) => {
     t.el.classList.remove('is-hopping'); void t.el.offsetWidth; t.el.classList.add('is-hopping');
-    if (spin && !reduce) t.vy += 18;
+    if (spin && !reduce && t.spin) t.spin.vy += 18;
   };
 
-  // ── Drag to spin.
+  // ── Drag to spin (shared engine); a tap makes them hop and talk.
+  const chat = t => { hop(t, true); say(t, LINES[t.name][t.said++ % LINES[t.name].length]); };
   toys.forEach(t => {
-    t.el.addEventListener('pointerdown', e => {
-      t.drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY };
-      t.el.setPointerCapture(e.pointerId);
-      t.el.classList.add('is-grabbed');
-    });
-    t.el.addEventListener('pointermove', e => {
-      if (!t.drag) return;
-      const dx = e.clientX - t.drag.x, dy = e.clientY - t.drag.y;
-      t.drag.x = e.clientX; t.drag.y = e.clientY;
-      t.ry += dx * .7; t.rx = Math.max(-70, Math.min(50, t.rx - dy * .5));
-      t.vy = dx * .7;
-    });
-    const end = () => {
-      if (!t.drag) return;
-      const moved = Math.hypot(t.drag.x - t.drag.sx, t.drag.y - t.drag.sy);
-      t.drag = null;
-      t.el.classList.remove('is-grabbed');
-      document.documentElement.classList.add('toys-touched');
-      if (moved < 5) { hop(t, true); say(t, LINES[t.name][t.said++ % LINES[t.name].length]); }
-      t.el.blur();
-    };
-    t.el.addEventListener('pointerup', end);
-    t.el.addEventListener('pointercancel', end);
+    t.spin = Cubes.spinner(t.el, t.rig, { base: t.name === 'cat' ? -24 : 24, tilt: -14, sway: 18, phase: t.name === 'cat' ? 2 : 0,
+      active: () => t.el.offsetParent !== null, onTap: () => { chat(t); t.el.blur(); } });
     t.el.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); hop(t, true); say(t, LINES[t.name][t.said++ % LINES[t.name].length]); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); chat(t); }
     });
   });
 
@@ -136,28 +108,6 @@
     first = false;
   };
   document.addEventListener('spread', e => onSpread(e.detail.state));
-
-  // ── Spin loop: momentum, then a lazy idle turn.
-  let last = performance.now();
-  const loop = now => {
-    const dt = Math.min(50, now - last) / 16.67; last = now;
-    toys.forEach(t => {
-      if (!t.drag) {
-        t.ry += t.vy * dt;
-        t.vy *= Math.pow(.94, dt);
-        // Once the momentum dies down, swing back round to a three-quarter view facing the book, and sway.
-        if (Math.abs(t.vy) < 1.2) {
-          const base = (t.name === 'cat' ? -24 : 24) + (reduce ? 0 : Math.sin(now / 1700 + (t.name === 'cat' ? 2 : 0)) * 18);
-          const target = base + 360 * Math.round((t.ry - base) / 360);
-          t.ry += (target - t.ry) * .05 * dt;
-        }
-        t.rx += (-14 - t.rx) * .04 * dt;
-      }
-      t.rig.style.transform = `rotateX(${t.rx}deg) rotateY(${t.ry}deg)`;
-    });
-    requestAnimationFrame(loop);
-  };
-  requestAnimationFrame(loop);
 
   // Catch up if the book already opened before we loaded.
   if (typeof window.__spread === 'number') onSpread(window.__spread);

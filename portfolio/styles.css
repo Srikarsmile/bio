@@ -3,10 +3,12 @@
    ───────────────────────────────────────────── */
 
 :root {
-  --cream: #F3ECDF;
-  --ink: #1F1D1B;
-  --tomato: #E5533C;
-  --desk: #E7DDCB;
+  --cream: #F4EFE4;      /* paper */
+  --navy: #0E1A3A;       /* ink */
+  --cobalt: #2B4FE0;     /* the blue */
+  --sky: #86A8FF;        /* highlights on navy */
+  --mist: #C9D5FF;       /* highlights on cobalt */
+  --desk: #E2E6EF;
 
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -16,8 +18,8 @@
   --turn: 1.1s;
 
   /* Desktop: an open book, two portrait pages side by side. */
-  --ratio: .76;                                   /* page width / height */
-  --pw: min(calc((100vw - 48px) / 2), calc((100svh - 176px) * var(--ratio)));
+  --ratio: .78;                                   /* page width / height */
+  --pw: min(calc((100vw - 300px) / 2), calc((100svh - 104px) * var(--ratio)));
   --ph: calc(var(--pw) / var(--ratio));
   --book-w: calc(var(--pw) * 2);
   --book-h: var(--ph);
@@ -25,9 +27,9 @@
 }
 
 /* Each theme is the same three inks, reshuffled. */
-[data-theme="cream"]  { --bg: var(--cream);  --fg: var(--ink);   --accent: var(--tomato); }
-[data-theme="tomato"] { --bg: var(--tomato); --fg: var(--ink);   --accent: var(--cream);  }
-[data-theme="ink"]    { --bg: var(--ink);    --fg: var(--cream); --accent: var(--tomato); }
+[data-theme="cream"] { --bg: var(--cream);  --fg: var(--navy);  --accent: var(--cobalt); --em: var(--cobalt); }
+[data-theme="blue"]  { --bg: var(--cobalt); --fg: var(--cream); --accent: var(--cream);  --em: var(--mist);   --art: var(--navy); }
+[data-theme="navy"]  { --bg: var(--navy);   --fg: var(--cream); --accent: var(--sky);    --em: var(--sky);    }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -37,15 +39,15 @@ body {
   font-family: var(--body);
   font-size: 1rem;
   line-height: 1.5;
-  color: var(--ink);
-  background: radial-gradient(120% 90% at 50% 45%, #EFE6D6 0%, var(--desk) 55%, #D9CDB7 100%);
+  color: var(--navy);
+  background: radial-gradient(120% 90% at 50% 45%, #EEF1F7 0%, var(--desk) 55%, #C9D0DE 100%);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
 a { color: inherit; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--tomato); outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; border-radius: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ───────── Top bar ───────── */
@@ -59,17 +61,17 @@ button { font: inherit; color: inherit; }
   text-decoration: none; letter-spacing: -.02em;
   font-variation-settings: "SOFT" 100, "WONK" 1;
 }
-.bar__name span { color: var(--tomato); }
+.bar__name span { color: var(--cobalt); }
 .bar__toc {
   font-size: .9rem; font-weight: 600; cursor: pointer;
-  color: var(--cream); background: var(--ink);
+  color: var(--cream); background: var(--navy);
   border: 0; border-radius: 999px; padding: 9px 18px;
   transition: transform .2s var(--ease-back);
 }
 .bar__toc:hover { transform: scale(1.06) rotate(-2deg); }
 .bar__progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; }
 .bar__progress span {
-  display: block; height: 100%; background: var(--ink);
+  display: block; height: 100%; background: var(--navy);
   transform-origin: left; transform: scaleX(var(--p, 0));
   transition: transform var(--turn) var(--ease-out);
 }
@@ -78,7 +80,7 @@ button { font: inherit; color: inherit; }
 .desk {
   height: 100%;
   display: grid; place-items: center; align-content: center; gap: 18px;
-  padding: 68px 16px 16px;
+  padding: 70px 16px 30px;
 }
 
 .book {
@@ -96,8 +98,8 @@ button { font: inherit; color: inherit; }
 .book::before {
   content: ""; position: absolute; inset: 1% .8% -1.4%;
   border-radius: 10px;
-  background: #EEE5D5;
-  box-shadow: 0 30px 60px -18px rgba(60, 40, 20, .45), 0 10px 18px -8px rgba(60, 40, 20, .3);
+  background: #EAE5DA;
+  box-shadow: 0 34px 70px -18px rgba(14, 26, 58, .42), 0 12px 20px -8px rgba(14, 26, 58, .28);
   transition: left var(--turn) var(--ease-out), right var(--turn) var(--ease-out), top var(--turn) var(--ease-out), bottom var(--turn) var(--ease-out);
 }
 .book[data-state="closed"]::before { left: 50%; }
@@ -155,7 +157,7 @@ h1, h2 {
   text-wrap: balance;
 }
 h2 { font-size: calc(8.6 * var(--u)); }
-h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--em); }
 
 .folio {
   position: absolute; bottom: calc(4.5 * var(--u));
@@ -211,14 +213,23 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
 .btn--solid { background: var(--fg); color: var(--bg); }
 
 /* ───────── Controls under the book ───────── */
-.controls { display: flex; align-items: center; gap: 18px; }
+/* Desktop: arrows sit either side of the book; the page count lives in the top bar. */
+.controls {
+  position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 clamp(14px, 2.4vw, 36px);
+}
+.controls > * { pointer-events: auto; }
+.controls .where {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+}
 .turn {
   width: 48px; height: 48px; border-radius: 50%;
-  border: 2px solid var(--ink); background: transparent; cursor: pointer;
+  border: 2px solid var(--navy); background: transparent; cursor: pointer;
   font-size: 1.25rem; font-weight: 700; display: grid; place-items: center;
   transition: background-color .2s, color .2s, transform .25s var(--ease-back), opacity .2s;
 }
-.turn:hover:not(:disabled) { background: var(--ink); color: var(--cream); transform: scale(1.08); }
+.turn:hover:not(:disabled) { background: var(--navy); color: var(--cream); transform: scale(1.08); }
 .turn:disabled { opacity: .25; cursor: default; }
 .where { margin: 0; min-width: 9ch; text-align: center; font-weight: 700; font-size: .9rem; font-variant-numeric: tabular-nums; }
 
@@ -230,11 +241,11 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
   background: var(--bg); color: var(--fg);
   box-shadow: 0 30px 80px -20px rgba(0,0,0,.5);
 }
-.sheet::backdrop { background: rgba(31, 29, 27, .45); backdrop-filter: blur(3px); }
+.sheet::backdrop { background: rgba(14, 26, 58, .5); backdrop-filter: blur(3px); }
 .sheet[open] { animation: sheet-in .45s var(--ease-back); }
 @keyframes sheet-in { from { opacity: 0; transform: translateY(24px) scale(.96) rotate(-1deg); } }
 .sheet__head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 6px; }
-.sheet__title { margin: 0; font-family: var(--display); font-weight: 800; font-style: italic; font-size: 1.5rem; color: var(--accent); }
+.sheet__title { margin: 0; font-family: var(--display); font-weight: 800; font-style: italic; font-size: 1.5rem; color: var(--em); }
 .sheet__close {
   width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
   border: 2px solid currentColor; background: transparent; font-size: 1.4rem; line-height: 1;
@@ -255,7 +266,7 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
 /* ───────── Contents overlay ───────── */
 .toc {
   position: fixed; inset: 0; z-index: 60;
-  background: var(--ink); color: var(--cream);
+  background: var(--navy); color: var(--cream);
   display: grid; place-items: center;
   padding: 80px clamp(16px, 6vw, 96px);
   clip-path: circle(0% at calc(100% - 60px) 36px);
@@ -275,21 +286,21 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
 }
 .toc__list a span { font-family: var(--body); font-size: .9rem; font-weight: 700; min-width: 1.5em; }
 .toc__list a i { margin-left: auto; font-family: var(--body); font-style: normal; font-size: .85rem; font-weight: 600; opacity: .7; white-space: nowrap; }
-.toc__list a:hover, .toc__list a:focus-visible { padding-left: 18px; color: var(--tomato); }
+.toc__list a:hover, .toc__list a:focus-visible { padding-left: 18px; color: var(--cobalt); }
 .toc__close {
   margin-top: 32px; font-weight: 600; cursor: pointer;
   background: transparent; border: 2px solid currentColor; border-radius: 999px; padding: 10px 22px;
 }
 
 /* ───────── Illustration inks ───────── */
-.fill-fg     { fill: var(--fg); }
+.fill-fg     { fill: var(--art, var(--fg)); }
 .fill-bg     { fill: var(--bg); }
 .fill-accent { fill: var(--accent); }
-.stroke-fg     { stroke: var(--fg); fill: none; }
+.stroke-fg     { stroke: var(--art, var(--fg)); fill: none; }
 .stroke-bg     { stroke: var(--bg); }
 .stroke-accent { stroke: var(--accent); fill: none; }
 .fill-bg.stroke-fg { fill: var(--bg); }
-.fill-fg.stroke-bg, .fill-fg.stroke-accent { fill: var(--fg); }
+.fill-fg.stroke-bg, .fill-fg.stroke-accent { fill: var(--art, var(--fg)); }
 .bubble-text { font-family: var(--display); font-weight: 800; font-size: 34px; font-style: italic; }
 .bubble-text--md { font-size: 26px; }
 .bubble-text--sm { font-family: var(--body); font-style: normal; font-weight: 700; font-size: 20px; }
@@ -338,12 +349,14 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
 /* ───────── Phones: the book becomes a flip-pad (text on top, picture below) ───────── */
 @media (max-width: 760px) and (orientation: portrait) {
   :root {
-    --ratio: 1.12;
-    --pw: min(calc(100vw - 32px), calc((100svh - 150px) / 2 * var(--ratio)));
+    --ratio: 1.08;
+    --pw: min(calc(100vw - 24px), calc((100svh - 150px) / 2 * var(--ratio)));
     --book-w: var(--pw);
     --book-h: calc(var(--ph) * 2);
   }
-  .desk { padding-top: 58px; gap: 12px; }
+  .desk { padding-top: 68px; gap: 10px; }
+  .controls { position: static; padding: 0; gap: 18px; justify-content: center; }
+  .controls .where { position: static; transform: none; }
   .bar { padding: 12px 16px; }
   .book[data-state="closed"] { transform: translateY(-25%); }
   .book[data-state="end"]    { transform: translateY(25%); }
@@ -386,3 +399,89 @@ h1 em, h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
 .splat-canvas, .splat-still { position: absolute; pointer-events: none; z-index: 1; }
 .has-splats .art.is-splatted { visibility: hidden; }
 .face--art::after, .face--cover::after { z-index: 3; }
+
+/* ───────── Cube characters in the margins ───────── */
+@property --arm { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.toy {
+  position: fixed; z-index: 30;
+  width: 140px; height: 190px;
+  perspective: 700px;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  outline-offset: 6px; border-radius: 16px;
+}
+.toy--left  { left:  max(4px, calc((100vw - var(--book-w)) / 4 - 70px)); bottom: 6vh; }
+.toy--right { right: max(4px, calc((100vw - var(--book-w)) / 4 - 70px)); top: 13vh; }
+.toy.is-grabbed { cursor: grabbing; }
+.toy__hop, .toy__rig { position: absolute; left: 50%; top: 58%; transform-style: preserve-3d; }
+.toy:hover .toy__hop { scale: 1.38; }
+.toy__hop { scale: 1.3; transition: scale .3s var(--ease-back); }
+.toy.is-hopping .toy__hop { animation: toy-hop .6s var(--ease-out); }
+@keyframes toy-hop { 30% { translate: 0 -34px; } 55% { translate: 0 0; } 70% { translate: 0 -8px; } 100% { translate: 0 0; } }
+.toy__shadow {
+  position: absolute; left: 50%; bottom: 4px; width: 84px; height: 14px; translate: -50% 0;
+  border-radius: 50%; background: radial-gradient(closest-side, rgba(14, 26, 58, .28), transparent);
+}
+.toy.is-hopping .toy__shadow { animation: toy-shadow .6s var(--ease-out); }
+@keyframes toy-shadow { 30% { scale: .6; opacity: .5; } }
+
+.cube {
+  position: absolute; left: 0; top: 0;
+  width: var(--w); height: var(--h);
+  transform-style: preserve-3d;
+  transform: translate3d(calc(var(--x) - var(--w) / 2), calc(var(--y) - var(--h) / 2), var(--z)) rotateZ(var(--arm));
+}
+.f { position: absolute; display: block; background: var(--c); backface-visibility: hidden; box-shadow: inset 0 0 0 1px rgba(14, 26, 58, .22); }
+.f::after { content: ""; position: absolute; inset: 0; }
+.f--front  { width: var(--w); height: var(--h); transform: translateZ(calc(var(--d) / 2)); }
+.f--back   { width: var(--w); height: var(--h); transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); }
+.f--right  { width: var(--d); height: var(--h); left: calc((var(--w) - var(--d)) / 2); transform: rotateY(90deg) translateZ(calc(var(--w) / 2)); }
+.f--left   { width: var(--d); height: var(--h); left: calc((var(--w) - var(--d)) / 2); transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); }
+.f--top    { width: var(--w); height: var(--d); top: calc((var(--h) - var(--d)) / 2); transform: rotateX(90deg) translateZ(calc(var(--h) / 2)); }
+.f--bottom { width: var(--w); height: var(--d); top: calc((var(--h) - var(--d)) / 2); transform: rotateX(-90deg) translateZ(calc(var(--h) / 2)); }
+.f--top::after    { background: rgba(255, 255, 255, .22); }
+.f--right::after  { background: rgba(14, 26, 58, .14); }
+.f--left::after   { background: rgba(14, 26, 58, .24); }
+.f--back::after   { background: rgba(14, 26, 58, .3); }
+.f--bottom::after { background: rgba(14, 26, 58, .4); }
+
+.cube.wave { transform-origin: 50% 0; animation: arm-wave 2.4s ease-in-out infinite; }
+@keyframes arm-wave { 0%, 55%, 100% { --arm: 0deg; } 65% { --arm: -150deg; } 75% { --arm: -110deg; } 85% { --arm: -150deg; } }
+.cube.tail { transform-origin: 50% 100%; animation: tail 3s ease-in-out infinite; }
+@keyframes tail { 50% { --arm: 18deg; } }
+.cube.blink .f--front { animation: eye-blink 4.5s ease-in-out infinite; }
+@keyframes eye-blink { 0%, 92%, 100% { scale: 1 1; } 96% { scale: 1 .1; } }
+.cube.glow .f { animation: glow 2.2s ease-in-out infinite; }
+@keyframes glow { 50% { filter: brightness(1.35); } }
+
+.toy__bubble {
+  position: absolute; bottom: calc(100% + 4px); left: 50%; translate: -50% 6px;
+  margin: 0; width: max-content; max-width: 190px;
+  padding: 9px 14px; border-radius: 16px;
+  background: var(--navy); color: var(--cream);
+  font-size: .85rem; font-weight: 700; line-height: 1.3; text-align: center;
+  opacity: 0; scale: .8; pointer-events: none;
+  transition: opacity .25s, scale .35s var(--ease-back), translate .35s var(--ease-back);
+}
+.toy__bubble::after {
+  content: ""; position: absolute; left: 50%; top: 100%; translate: -50% -1px;
+  border: 7px solid transparent; border-top-color: var(--navy);
+}
+.toy.is-talking .toy__bubble { opacity: 1; scale: 1; translate: -50% 0; }
+.toy__hint {
+  position: absolute; left: 50%; bottom: -18px; translate: -50% 0; white-space: nowrap;
+  font-size: .75rem; font-weight: 700; letter-spacing: .04em; opacity: .55;
+  animation: nudge-down 1.6s ease-in-out infinite;
+}
+.toys-touched .toy__hint { display: none; }
+
+/* Only where there's room beside the book. */
+@media (max-width: 999px), (max-height: 560px) { .toy { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cube.wave, .cube.tail, .cube.blink .f--front, .cube.glow .f { animation: none; } }
+
+/* Bubbles open toward the book so they never run off-screen. */
+.toy--left .toy__bubble  { left: 18px; translate: 0 6px; }
+.toy--left .toy__bubble::after  { left: 40px; }
+.toy--left.is-talking .toy__bubble  { translate: 0 0; }
+.toy--right .toy__bubble { left: auto; right: 18px; translate: 0 6px; }
+.toy--right .toy__bubble::after { left: auto; right: 32px; translate: 0 -1px; }
+.toy--right.is-talking .toy__bubble { translate: 0 0; }

@@ -20,6 +20,9 @@ cd portfolio && python3 -m http.server 8000
 - Reduced-motion users, browsers without WebGL2, and machines that can't keep up all get the flat SVG drawings automatically.
 - Add `?splats=force` to the URL to keep splats on even on a slow GPU.
 
+## Cube characters
+`toys.js` adds a cube robot and a cube cat in the margins, built from CSS 3D cubes. Drag one to spin it with momentum, or click/tap/press Enter to make it hop and talk. They also comment on certain pages. Their lines are in `LINES` and `CUES` at the top of the file. They only appear when the screen is wide enough to fit them beside the book.
+
 ## Editing
 - Each leaf in `index.html` is one sheet of paper. Its front is a right-hand page and its back is the next left-hand page.
 - Story text goes in `.say` headings. Recruiter detail goes in the `<template id="noteN">` next to each one.

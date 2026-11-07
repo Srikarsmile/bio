@@ -68,6 +68,7 @@
     }));
 
     window.__currentFaces = current;
+    window.__spread = state;
     document.dispatchEvent(new CustomEvent('spread', { detail: { faces: current, state } }));
 
     const hash = state === 0 ? '#cover' : state === N ? '#end' : `#p${state}`;

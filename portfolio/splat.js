@@ -8,7 +8,7 @@
    around the cursor.
    ───────────────────────────────────────────── */
 (() => {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || location.search.includes('splats=off')) return;
 
   const canvas = document.createElement('canvas');
   canvas.className = 'splat-canvas';
